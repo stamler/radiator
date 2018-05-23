@@ -4,3 +4,6 @@
 
 # Ignore all archives
 *.zip
+
+# Ignore python cache
+*.pyc
