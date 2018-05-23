@@ -1,4 +1,6 @@
 'RECORD INFO ON USER LOGIN
+'(c) 2016-2018 Dean Stamler
+'MIT License
 'v3.3
 
 'TODO
