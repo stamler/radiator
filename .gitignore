@@ -1,0 +1,6 @@
+# Ignore all log data
+*.log
+*.csv
+
+# Ignore all archives
+*.zip
