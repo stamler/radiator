@@ -1,5 +1,5 @@
 'RECORD INFO ON USER LOGIN
-'v3.2
+'v3.3
 
 'TODO
 'https://msdn.microsoft.com/en-us/library/aa394217(v=vs.85).aspx
@@ -24,7 +24,7 @@ Function zeroPad(num)
 End Function
 Function GetPythonListString_FromArrayOfStrings( ArrayString, Separator, quoted)
     If IsNull ( ArrayString ) Then
-        StrMultiArray = ArrayString
+        StrMultiArray = chr(34) & chr(34)
     else
         StrMultiArray = "["
         length = ubound(ArrayString)
@@ -120,7 +120,7 @@ Next
 'WRITE TO FILE
 'Datetime,UserName,Manufacturer,Serial,ComputerName,macAddress
 set objFSO = CreateObject("Scripting.FileSystemObject")
-set objFile = objFSO.OpenTextFile("\\fileserver.domain.local\logs\v3.2\" & objNet.ComputerName & ".log",8,True)
+set objFile = objFSO.OpenTextFile("\\fileserver.domain.local\logs\v3.3\" & objNet.ComputerName & ".log",8,True)
 objFile.WriteLine("""" & stdDateFormat(Now) & """" &  "," & _
                   """" & objNet.UserName & """" & "," & _
                   """" & mfgName & """" & "," & _
