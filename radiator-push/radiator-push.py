@@ -4,7 +4,7 @@
 
 from glob import iglob
 from sys import exit
-from helpers import InventoryLogFile
+from InventoryLogFile import InventoryLogFile
 from os import path, getcwd, makedirs, scandir
 from datetime import datetime
 from shutil import move
@@ -17,7 +17,7 @@ log.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 fmt = logging.Formatter('%(asctime)s %(name)s %(levelname)s: %(message)s')
 ch.setFormatter(fmt)
-ch.setLevel(logging.DEBUG)
+ch.setLevel(logging.INFO)
 log.addHandler(ch)
 
 config = {

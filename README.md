@@ -9,9 +9,9 @@ Early versions of radiator.vbs (v2 and prior) logged data with ambiguous dates. 
 ## install
 docker build -t radiator https://github.com/stamler/radiator.git
 
-# run
+## run
 docker run --net=host -v /path/to/logs/parent/:/working radiator
 
-### Notes: radiator.vbs
+### radiator.vbs notes
 - network configuration is stored as JSON for each adapter (up to 5)
   https://msdn.microsoft.com/en-us/library/aa394217(v=vs.85).aspx
