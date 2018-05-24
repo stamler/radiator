@@ -17,7 +17,7 @@ log.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 fmt = logging.Formatter('%(asctime)s %(name)s %(levelname)s: %(message)s')
 ch.setFormatter(fmt)
-ch.setLevel(logging.WARNING)
+ch.setLevel(logging.DEBUG)
 log.addHandler(ch)
 
 config = {
