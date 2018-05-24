@@ -4,7 +4,7 @@ from datetime import datetime
 import logging
 
 def snap_to_bound(raw_date_string, bound, upper=False):
-    log = logging.getLogger()
+    log = logging.getLogger(__name__)
 
     # Generate both posible datetime objects from raw_date_string
     # Check to ensure the resulting datetime objects are greater than the
