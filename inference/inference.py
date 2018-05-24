@@ -3,8 +3,9 @@
 from datetime import datetime
 import logging
 
+log = logging.getLogger(__name__)
+
 def snap_to_bound(raw_date_string, bound, upper=False):
-    log = logging.getLogger(__name__)
 
     # Generate both posible datetime objects from raw_date_string
     # Check to ensure the resulting datetime objects are greater than the
@@ -18,8 +19,8 @@ def snap_to_bound(raw_date_string, bound, upper=False):
     else:
         bdisp = 'lower'
 
-    log.debug("      snapping %s to %s bound %s", raw_date_string, bdisp, bound)
-    log.debug("        Choices: %s and %s", dmy, mdy)
+    log.debug("snapping %s to %s bound %s", raw_date_string, bdisp, bound)
+    log.debug("Choices: %s and %s", dmy, mdy)
     if(upper):
         if (dmy > bound):
             dmy = None
@@ -35,17 +36,17 @@ def snap_to_bound(raw_date_string, bound, upper=False):
         if (mdy):
             # both are defined so find the closest one
             if(abs(dmy - bound) < abs(mdy - bound)):
-                log.debug("        Chose %s", dmy)
+                log.debug("Chose %s", dmy)
                 return dmy
             else:
-                log.debug("        Chose %s", mdy)
+                log.debug("Chose %s", mdy)
                 return mdy
 
         else:
-            log.debug("        Chose %s", dmy)
+            log.debug("Chose %s", dmy)
             return dmy
     elif (mdy):
-        log.debug("        Chose %s", mdy)
+        log.debug("Chose %s", mdy)
         return mdy
     else:
         # Both choices are out of bounds (None), raise an exception
@@ -54,7 +55,7 @@ def snap_to_bound(raw_date_string, bound, upper=False):
             ))
 
 def infer(lower_bound, upper_bound, string_list, descending=False):
-    log = logging.getLogger()
+
     if(lower_bound):
         lb = lower_bound
     else:
@@ -63,7 +64,7 @@ def infer(lower_bound, upper_bound, string_list, descending=False):
         ub = upper_bound
     else:
         ub='no upper bound'
-    log.debug('    infer called with bounds of %s and %s', lb, ub)
+    log.debug("infer called with bounds of %s and %s", lb, ub)
     out_list = [] # a list of datetime objects
 
     if(descending):

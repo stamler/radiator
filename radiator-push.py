@@ -12,10 +12,12 @@ from requests import post
 import json
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger()
 log.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
-ch.setLevel(logging.INFO)
+fmt = logging.Formatter('%(asctime)s %(name)s %(levelname)s: %(message)s')
+ch.setFormatter(fmt)
+ch.setLevel(logging.WARNING)
 log.addHandler(ch)
 
 config = {
@@ -56,19 +58,20 @@ def groom(search_path):
             dest = (config['stage_path'] +
                     path.basename(filename) + "_" + timestamp + ".log")
             move(filename, dest)
+        log.debug("Moved files to stage_path")
 
     linecount = 0
 
     for filename in iglob(path.join(config['stage_path'],'*.log')):
+        log.info(filename)
         try:
             inventory_log_file = InventoryLogFile(filename)
         except ValueError as e:
             log.error(e)
-            log.error("Skipping file {}".format(filename))
+            log.error("Skipping file {}".format(path.basename(filename)))
             continue
 
         lc = len(inventory_log_file.lines)
-
         # We can now output the lines in a groomed format
         linecount += lc
 
@@ -76,7 +79,7 @@ def groom(search_path):
                                         'Accept':'application/json'}
         data = inventory_log_file.to_json()
 
-        log.info("Sending {} items.".format(lc))
+        log.debug("Sending {} items.".format(lc))
 
         r = post(config['api_endpoint'], data=data, headers=headers)
 
@@ -90,26 +93,29 @@ def groom(search_path):
         if r.status_code == 201:
             rowcount = data['rowcount']
             if lc == rowcount:
-                log.info("  201 Saved {} items.".format(rowcount))
+                log.info("201 Saved {} items.".format(rowcount))
         elif r.status_code == 207:
             rowcount = 0
             for i in data:
                 if ( i['client_id'] in inventory_log_file.client_ids and
                         i['status'] == '201 Created' and
                         i['body']['rowcount'] == 1 ):
-                    log.debug("  returned client_id {} was sent".format(
+                    log.debug("returned client_id {} was sent".format(
                                                             i['client_id']))
                     rowcount += 1
             if lc == rowcount:
-                log.info("  207 Saved and matched {} items.".format(rowcount))
+                log.info("207 Saved and matched {} items.".format(rowcount))
 
         else:
-            log.error("FAILURE: A non-successful HTTP status was returned")
+            msg = "HTTP status {} was returned".format(r.status_code)
+            log.error(msg)
+            raise ValueError(msg)
 
         inventory_log_file.close_file()
 
         # Move the file from stage_path to complete_path
         move(filename, config['complete_path'])
+        log.debug("Moved {} to complete_path".format(path.basename(filename)))
 
     log.info('\ngroomed {} lines'.format(linecount))
 

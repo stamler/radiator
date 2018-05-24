@@ -1,20 +1,19 @@
 # (c) 2018 Dean Stamler
 
 import logging, json, constants
-from inference import infer
+import inference
 from datetime import datetime
 import random, string
 
 class InventoryLogFile(object):
     """Wrapper for a log file"""
     def __init__(self, f):
-        super(InventoryLogFile, self).__init__()
+        self.log = logging.getLogger(__name__)
         try:
             self.filehandle = open(f)
         except ValueError as e:
             log.error("Failed to open {}".format(f))
 
-        self.log = logging.getLogger()
         self.version, self.regex = self._get_version()
         self.load_file()
         self.client_ids = []
@@ -30,7 +29,7 @@ class InventoryLogFile(object):
         for v in constants.Version:
             regex = getattr(constants, 'full_line_' + v.name)
             if (regex.match(first_line)):
-                self.log.info("%s log file: %s", v.name, self.filehandle.name)
+                self.log.debug("log file version %s", v.name)
                 version = v
                 break
         if(version is None):
@@ -136,16 +135,16 @@ class InventoryLogFile(object):
         # unambiguous, a datetime object. Now we go through this list and infer
         # the value of ambiguous dates if there are any.
         if (ambiguous_date_count > 0):
-            self.log.info('  Detected {} ambiguous dates in {} lines of {}'
-                    ''.format(ambiguous_date_count,len(lines), self.filehandle.name))
+            self.log.debug("Detected {} ambiguous dates in {} lines of {}"
+                    "".format(ambiguous_date_count,len(lines), self.filehandle.name))
             lines = self._disambiguate_dates_in_context(lines)
 
-        self.log.debug('  Loaded %s lines from file.', len(lines))
+        self.log.debug("Loaded %s lines.", len(lines))
         self.lines = lines
 
     def _unwrap_process_rewrap(self, lower_bound, upper_bound, line_objects):
         s = [obj['raw_date_string'] for obj in line_objects]
-        datetime_list = infer(lower_bound, upper_bound, s)
+        datetime_list = inference.infer(lower_bound, upper_bound, s)
         for idx, line_object in enumerate(line_objects):
             line_object['datetime'] = datetime_list[idx]
             del(line_object['raw_date_string'])
