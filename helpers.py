@@ -11,8 +11,8 @@ class InventoryLogFile(object):
         super(InventoryLogFile, self).__init__()
         try:
             self.filehandle = open(f)
-        except Exception as e:
-            raise ValueError("Can't open %s", f)
+        except ValueError as e:
+            log.error("Failed to open {}".format(f))
 
         self.log = logging.getLogger()
         self.version, self.regex = self._get_version()
@@ -33,8 +33,9 @@ class InventoryLogFile(object):
                 self.log.info("%s log file: %s", v.name, self.filehandle.name)
                 version = v
                 break
-        if(not version):
-            raise ValueError("Unable to determine format of %s", self.filehandle.name)
+        if(version is None):
+            msg = "Unable to determine version of {}".format(self.filehandle.name)
+            raise ValueError(msg)
         return version, regex
 
     def _disambiguate_dates_in_context(self, line_objects):
