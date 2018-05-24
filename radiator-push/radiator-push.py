@@ -53,6 +53,14 @@ def groom(search_path):
     # Move log files in search_path to stage_path unless we're resuming.
     # Add timestamp to name.
     if(resume_mode is False):
+        # TODO: There may be duplicate rows in the database after a resume
+        # if the previous upload was interrupted. The solution is do find
+        # duplicate ROWS on the server (in charade). Some SQL which can
+        # do this follows:
+        # SELECT datetime, username, serial, computer_name, count(*) as dupes
+        # FROM <Raw_Logins_Table_Name>
+        # GROUP BY datetime, username, serial, computer_name HAVING dupes > 1
+
         for filename in iglob(path.join(search_path,'**/*.log'), recursive=True):
             timestamp = datetime.now().strftime("%Y%m%d%H%M%S-%f")
             dest = (config['stage_path'] +
@@ -81,6 +89,7 @@ def groom(search_path):
 
         log.debug("Sending {} items.".format(lc))
 
+        # TODO: Authentication with the API endpoint. Attach token to request
         r = post(config['api_endpoint'], data=data, headers=headers)
 
         # Possible responses:
