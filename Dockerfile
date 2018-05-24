@@ -5,10 +5,13 @@ RUN apk add --no-cache bash
 
 # Install python package requirements
 COPY ./radiator-push /app
-WORKDIR /app
-RUN pip install --upgrade -r requirements.txt
+RUN pip install --upgrade -r /app/requirements.txt
 
-CMD ["python", "radiator-push.py"]
+# Create the volume mountpoint
+RUN mkdir /working
+WORKDIR /working
+
+CMD ["python", "/app/radiator-push.py"]
 
 # https://stackoverflow.com/questions/23810845/
 # docker build -t radiator-push .

@@ -6,6 +6,12 @@ The `radiator.py` component is being written for deployment in a docker containe
 ## grooming
 Early versions of radiator.vbs (v2 and prior) logged data with ambiguous dates. For example mm/dd/yyyy vs dd/mm/yyyy. The grooming process accounts for these discrepancies using the included inference module.
 
-### radiator.vbs
+## install
+docker build -t radiator https://github.com/stamler/radiator.git
+
+# run
+docker run --net=host -v /path/to/logs/parent/:/working radiator
+
+### Notes: radiator.vbs
 - network configuration is stored as JSON for each adapter (up to 5)
   https://msdn.microsoft.com/en-us/library/aa394217(v=vs.85).aspx

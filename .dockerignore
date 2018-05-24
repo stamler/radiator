@@ -1,8 +1,2 @@
-radiator-push/*.log
-radiator-push/*.zip
-radiator-push/logs
-radiator-push/stage
-radiator-push/uploaded
-radiator-push/__MACOSX
 radiator-push/__pycache__
 radiator-push/*.pyc
