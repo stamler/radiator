@@ -12,6 +12,12 @@ from requests import post
 import json
 import logging
 
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+log.addHandler(ch)
+
 config = {
     "api_endpoint": "http://localhost:9090/RawLogins",
     "search_path": path.join(getcwd(),'logs/'),
@@ -19,27 +25,32 @@ config = {
     "complete_path": path.join(getcwd(),'uploaded/')
 }
 
-# Create staging and complete dirs. If they exist and contain files, notify
-makedirs(config['stage_path'], exist_ok=True)
-makedirs(config['complete_path'], exist_ok=True)
+def groom(search_path):
+    try:
+        # Check that the source path actually exists
+        if(path.isdir(config['search_path']) is not True):
+            msg = "{} is not a directory".format(config['search_path'])
+            log.error(msg)
+            raise NotADirectoryError(msg, config['search_path'])
 
-if next(scandir(config['stage_path']), None) is not None:
-    print("stage_path is not empty. Resuming from staging area...")
-    recover = True
-else:
-    recover = False
+        # Create staging and complete dirs. Throw an exception if stage
+        # exists because it may not be empty (incomplete previous run)
+        resume_mode = False
+        makedirs(config['complete_path'], exist_ok=True)
+        makedirs(config['stage_path'])
 
-def groom(search_path, recover=False):
+    except NotADirectoryError as e:
+        exit(1)
 
-    log = logging.getLogger()
-    log.setLevel(logging.DEBUG)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
-    log.addHandler(ch)
+    except FileExistsError as e:
+        # If stage_dir is not empty, enter resume mode
+        if next(scandir(config['stage_path']), None) is not None:
+            log.warning("stage_path is not empty. Resuming previous session...")
+            resume_mode = True
 
-    # Move log files in search_path to stage_path unless we're recovering.
+    # Move log files in search_path to stage_path unless we're resuming.
     # Add timestamp to name.
-    if(recover is False):
+    if(resume_mode is False):
         for filename in iglob(path.join(search_path,'**/*.log'), recursive=True):
             timestamp = datetime.now().strftime("%Y%m%d%H%M%S-%f")
             dest = (config['stage_path'] +
@@ -49,8 +60,13 @@ def groom(search_path, recover=False):
     linecount = 0
 
     for filename in iglob(path.join(config['stage_path'],'*.log')):
+        try:
+            inventory_log_file = InventoryLogFile(filename)
+        except ValueError as e:
+            log.error(e)
+            log.error("Skipping file {}".format(filename))
+            continue
 
-        inventory_log_file = InventoryLogFile(filename)
         lc = len(inventory_log_file.lines)
 
         # We can now output the lines in a groomed format
@@ -60,7 +76,7 @@ def groom(search_path, recover=False):
                                         'Accept':'application/json'}
         data = inventory_log_file.to_json()
 
-        print("Sending {} items.".format(lc))
+        log.info("Sending {} items.".format(lc))
 
         r = post(config['api_endpoint'], data=data, headers=headers)
 
@@ -74,27 +90,27 @@ def groom(search_path, recover=False):
         if r.status_code == 201:
             rowcount = data['rowcount']
             if lc == rowcount:
-                print("  201 Saved {} items.".format(rowcount))
+                log.info("  201 Saved {} items.".format(rowcount))
         elif r.status_code == 207:
             rowcount = 0
             for i in data:
                 if ( i['client_id'] in inventory_log_file.client_ids and
                         i['status'] == '201 Created' and
                         i['body']['rowcount'] == 1 ):
-                    print("  returned client_id {} was sent".format(
+                    log.debug("  returned client_id {} was sent".format(
                                                             i['client_id']))
                     rowcount += 1
             if lc == rowcount:
-                print("  207 Saved and matched {} items.".format(rowcount))
+                log.info("  207 Saved and matched {} items.".format(rowcount))
 
         else:
-            print("FAILURE FAILURE FAILURE")
+            log.error("FAILURE: A non-successful HTTP status was returned")
 
         inventory_log_file.close_file()
 
         # Move the file from stage_path to complete_path
         move(filename, config['complete_path'])
 
-    print('\ngroomed {} lines'.format(linecount))
+    log.info('\ngroomed {} lines'.format(linecount))
 
-groom(config['search_path'], recover)
+groom(config['search_path'])
