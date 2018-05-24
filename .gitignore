@@ -4,6 +4,7 @@
 
 # Ignore all archives
 *.zip
+__MACOSX
 
 # Ignore python cache
 *.pyc
