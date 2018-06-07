@@ -43,7 +43,7 @@ def groom(search_path):
         makedirs(config['complete_path'], exist_ok=True)
         makedirs(config['stage_path'])
     except KeyError as e:
-        log.error("{} Exiting.".format(e))
+        log.error("Environment variable missing: {} Exiting.".format(e))
         exit(1)
 
     except NotADirectoryError as e:
