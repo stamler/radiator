@@ -5,7 +5,7 @@
 from glob import iglob
 from sys import exit
 from InventoryLogFile import InventoryLogFile
-from os import path, getcwd, makedirs, scandir
+from os import path, getcwd, makedirs, scandir, environ
 from datetime import datetime
 from shutil import move
 from requests import post
@@ -21,7 +21,6 @@ ch.setLevel(logging.INFO)
 log.addHandler(ch)
 
 config = {
-    "api_endpoint": "http://localhost:9090/RawLogins",
     "search_path": path.join(getcwd(),'logs/'),
     "stage_path": path.join(getcwd(),'stage/'),
     "complete_path": path.join(getcwd(),'uploaded/')
@@ -29,6 +28,9 @@ config = {
 
 def groom(search_path):
     try:
+        endpoint = environ['ENDPOINT']
+        jwt_token = environ['JWT_TOKEN']
+
         # Check that the source path actually exists
         if(path.isdir(config['search_path']) is not True):
             msg = "{} is not a directory".format(config['search_path'])
@@ -40,6 +42,9 @@ def groom(search_path):
         resume_mode = False
         makedirs(config['complete_path'], exist_ok=True)
         makedirs(config['stage_path'])
+    except KeyError as e:
+        log.error("{} Exiting.".format(e))
+        exit(1)
 
     except NotADirectoryError as e:
         exit(1)
@@ -83,14 +88,16 @@ def groom(search_path):
         # We can now output the lines in a groomed format
         linecount += lc
 
-        headers = {'Content-Type': 'application/json',
-                                        'Accept':'application/json'}
+        # Attach the token here
+        headers = { 'Content-Type': 'application/json',
+                    'Accept':'application/json',
+                    'Authorization': "Bearer {}".format(jwt_token)}
+        log.debug("headers: {}".format(headers))
         data = inventory_log_file.to_json()
 
         log.debug("Sending {} items.".format(lc))
 
-        # TODO: Authentication with the API endpoint. Attach token to request
-        r = post(config['api_endpoint'], data=data, headers=headers)
+        r = post(endpoint, data=data, headers=headers)
 
         # Possible responses:
         #   201: Created a single object
