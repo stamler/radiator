@@ -11,7 +11,7 @@ Early versions of radiator.vbs (v2 and prior) logged data with ambiguous dates. 
 ## install
 
 ```bash
-docker build -t radiator <https://github.com/stamler/radiator.git>
+docker build -t radiator https://github.com/stamler/radiator.git
 ```
 
 ## run
