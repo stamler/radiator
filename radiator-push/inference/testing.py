@@ -3,7 +3,7 @@
 import os, sys
 import unittest
 from datetime import datetime
-from inference.inference import snap_to_bound, infer
+from inference import snap_to_bound, infer
 
 # Make the parent directory the first element of sys.path so we can run
 #
