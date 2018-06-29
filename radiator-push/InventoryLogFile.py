@@ -11,8 +11,8 @@ class InventoryLogFile(object):
         self.log = logging.getLogger(__name__)
         try:
             self.filehandle = open(f)
-        except ValueError as e:
-            log.error("Failed to open {}".format(f))
+        except ValueError:
+            self.log.error("Failed to open {}".format(f))
 
         self.version, self.regex = self._get_version()
         self.load_file()
