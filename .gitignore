@@ -8,3 +8,5 @@ __MACOSX
 
 # Ignore python cache
 *.pyc
+
+.mypy_cache
