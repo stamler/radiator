@@ -31,16 +31,16 @@ $report = [PSCustomObject]@{
 
 $network_configs = @()
 ForEach ($c_net in $c_netset) {
-    $network_config = @{
+    $network_config = @{ "mapValue" = @{"fields" = @{
         mac = @{"stringValue" = $c_net.MACAddress }
         dhcp_enabled = @{"booleanValue" = $c_net.DHCPEnabled }
         dhcp_server = @{"stringValue" = $c_net.DHCPServer }
         dns_hostname = @{"stringValue" = $c_net.DNSHostName }
-        ips = @{"arrayValue" = $c_net.IPAddress }
-        subnets = @{"arrayValue" = $c_net.IPSubnet }
-        gateways = @{"arrayValue" = $c_net.DefaultIPGateway }
-        dns_order = @{"arrayValue" = $c_net.DNSServerSearchOrder }
-    }
+        ips = @{"arrayValue" = @{"values" = $c_net.IPAddress }}
+        subnets = @{"arrayValue" = @{"values" = $c_net.IPSubnet }}
+        gateways = @{"arrayValue" = @{"values" = $c_net.DefaultIPGateway }}
+        dns_order = @{"arrayValue" = @{"values" = $c_net.DNSServerSearchOrder }}
+    }}}
 
     $network_configs += $network_config
 }
