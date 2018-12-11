@@ -51,4 +51,4 @@ $body = [PSCustomObject]@{
     fields = $report
 }
 
-Invoke-WebRequest -Uri $dyle_endpoint -Method POST -Body $(ConvertTo-Json $body)
+Invoke-WebRequest -Uri $dyle_endpoint -Method POST -Body $(ConvertTo-Json -Depth 8 $body)
