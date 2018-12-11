@@ -11,6 +11,7 @@ $c_volume = Get-WmiObject Win32_Volume -Filter "BootVolume = True"
 $c_netset = Get-WmiObject Win32_NetworkAdapterConfiguration -Filter "IPEnabled = True"
 
 # Build the Report
+# TODO: figure out why 400 error occurs on post where an entry is 'null'
 $report = [PSCustomObject]@{
     datetime = @{"timestampValue" = $(Get-Date -Format "o")}
     # [System.Security.Principal.WindowsIdentity]::GetCurrent().Name returns domain prefix too
@@ -31,15 +32,29 @@ $report = [PSCustomObject]@{
 
 $network_configs = @()
 ForEach ($c_net in $c_netset) {
+    # Iterate over array elements and assign type stringValue
+    ForEach ($t in $c_net.IPAddress) {
+        [array]$ip_list += @{"stringValue" = $t}
+    }
+    ForEach ($t in $c_net.IPSubnet) {
+        [array]$subnet_list += @{"stringValue" = $t}
+    }
+    ForEach ($t in $c_net.DefaultIPGateway) {
+        [array]$gateway_list += @{"stringValue" = $t}
+    }
+    ForEach ($t in $c_net.DNSServerSearchOrder) {
+        [array]$dns_list += @{"stringValue" = $t}
+    }
+
     $network_config = @{ "mapValue" = @{"fields" = @{
         mac = @{"stringValue" = $c_net.MACAddress }
         dhcp_enabled = @{"booleanValue" = $c_net.DHCPEnabled }
         dhcp_server = @{"stringValue" = $c_net.DHCPServer }
         dns_hostname = @{"stringValue" = $c_net.DNSHostName }
-        ips = @{"arrayValue" = @{"values" = $c_net.IPAddress }}
-        subnets = @{"arrayValue" = @{"values" = $c_net.IPSubnet }}
-        gateways = @{"arrayValue" = @{"values" = $c_net.DefaultIPGateway }}
-        dns_order = @{"arrayValue" = @{"values" = $c_net.DNSServerSearchOrder }}
+        ips = @{"arrayValue" = @{"values" = $ip_list }}
+        subnets = @{"arrayValue" = @{"values" = $subnet_list }}
+        gateways = @{"arrayValue" = @{"values" = $gateway_list }}
+        dns_order = @{"arrayValue" = @{"values" = $dns_list }}
     }}}
 
     $network_configs += $network_config
@@ -51,4 +66,4 @@ $body = [PSCustomObject]@{
     fields = $report
 }
 
-Invoke-WebRequest -Uri $dyle_endpoint -Method POST -Body $(ConvertTo-Json -Depth 8 $body)
+Invoke-WebRequest -Uri $dyle_endpoint -Method POST -Body $(ConvertTo-Json -Depth 12 $body)
