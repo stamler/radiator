@@ -1,7 +1,7 @@
 # PS v2.0 compatible
 # PS v3.0 and later: Get-CimInstance replaces Get-WmiObject
 
-$dyle_endpoint = "https://firestore.googleapis.com/v1beta1/projects/<PROJECT_ID>/databases/(default)/documents/<COLLECTION_NAME>"
+$dyle_endpoint = "https://us-central1-charade-ca63f.cloudfunctions.net/rawLogins"
 
 # Get the Data
 $c_bios = Get-WmiObject Win32_Bios
@@ -11,7 +11,6 @@ $c_volume = Get-WmiObject Win32_Volume -Filter "BootVolume = True"
 $c_netset = Get-WmiObject Win32_NetworkAdapterConfiguration -Filter "IPEnabled = True"
 
 # Build the Report
-# TODO: figure out why 400 error occurs on post where an entry is 'null'
 $report = [PSCustomObject]@{
     datetime = $(Get-Date -Format "o")
     # [System.Security.Principal.WindowsIdentity]::GetCurrent().Name returns domain prefix too
@@ -61,4 +60,6 @@ ForEach ($c_net in $c_netset) {
 }
 $report | Add-Member -MemberType NoteProperty -Name network_config -Value $network_configs 
 
-Invoke-WebRequest -Uri $dyle_endpoint -Method POST -Body $(ConvertTo-Json -Depth 4 $report)
+# -ContentType is necessary because otherwise 
+# it will be interpreted as multipart form data
+Invoke-WebRequest -Uri $dyle_endpoint -Method POST -ContentType application/json -Body $(ConvertTo-Json -Depth 4 $report)
