@@ -13,66 +13,52 @@ $c_netset = Get-WmiObject Win32_NetworkAdapterConfiguration -Filter "IPEnabled =
 # Build the Report
 # TODO: figure out why 400 error occurs on post where an entry is 'null'
 $report = [PSCustomObject]@{
-    datetime = @{"timestampValue" = $(Get-Date -Format "o")}
+    datetime = $(Get-Date -Format "o")
     # [System.Security.Principal.WindowsIdentity]::GetCurrent().Name returns domain prefix too
-    username = @{ "stringValue" = $env:UserName }
-    serial = @{ "stringValue" = $c_bios.SerialNumber }
-    os_version = @{"stringValue" = $c_os.Version }
-    os_sku = @{"integerValue" = $c_os.OperatingSystemSKU }
-    os_arch = @{"stringValue" = $c_os.OSArchitecture }
-    manufacturer = @{"stringValue" = $c_system.Manufacturer }
-    model = @{"stringValue" = $c_system.Model }
-    name = @{"stringValue" = $c_system.Name }
-    ram = @{"integerValue" = $c_system.TotalPhysicalMemory }
-    boot_drive = @{"stringValue" = $c_volume.DriveLetter }
-    boot_drive_fs = @{"stringValue" = $c_volume.FileSystem }
-    boot_drive_cap = @{"integerValue" = $c_volume.Capacity }
-    boot_drive_free = @{"integerValue" = $c_volume.FreeSpace }
+    username = $env:UserName
+    serial = $c_bios.SerialNumber
+    os_version = $c_os.Version
+    os_sku = $c_os.OperatingSystemSKU
+    os_arch = $c_os.OSArchitecture
+    manufacturer = $c_system.Manufacturer
+    model = $c_system.Model
+    name = $c_system.Name
+    ram = $c_system.TotalPhysicalMemory
+    boot_drive = $c_volume.DriveLetter
+    boot_drive_fs = $c_volume.FileSystem
+    boot_drive_cap = $c_volume.Capacity
+    boot_drive_free = $c_volume.FreeSpace
 }
 
 $network_configs = @()
 ForEach ($c_net in $c_netset) {
     # Iterate over array elements and assign type stringValue
     ForEach ($t in $c_net.IPAddress) {
-        [array]$ip_list += @{"stringValue" = $t}
+        [array]$ip_list += $t
     }
     ForEach ($t in $c_net.IPSubnet) {
-        [array]$subnet_list += @{"stringValue" = $t}
+        [array]$subnet_list += $t
     }
     ForEach ($t in $c_net.DefaultIPGateway) {
-        [array]$gateway_list += @{"stringValue" = $t}
+        [array]$gateway_list += $t
     }
     ForEach ($t in $c_net.DNSServerSearchOrder) {
-        [array]$dns_list += @{"stringValue" = $t}
+        [array]$dns_list += $t
     }
 
-    $network_config = @{ "mapValue" = @{"fields" = @{
-        mac = @{"stringValue" = $c_net.MACAddress }
-        dhcp_enabled = @{"booleanValue" = $c_net.DHCPEnabled }
-        dhcp_server = @{"stringValue" = $c_net.DHCPServer }
-        dns_hostname = @{"stringValue" = $c_net.DNSHostName }
-        ips = @{"arrayValue" = @{"values" = $ip_list }}
-        subnets = @{"arrayValue" = @{"values" = $subnet_list }}
-        gateways = @{"arrayValue" = @{"values" = $gateway_list }}
-        dns_order = @{"arrayValue" = @{"values" = $dns_list }}
-    }}}
+    $network_config = @{
+        mac = $c_net.MACAddress
+        dhcp_enabled = $c_net.DHCPEnabled
+        dhcp_server = $c_net.DHCPServer
+        dns_hostname = $c_net.DNSHostName
+        ips = $ip_list
+        subnets = $subnet_list
+        gateways = $gateway_list
+        dns_order = $dns_list
+    }
 
     $network_configs += $network_config
 }
-$report | Add-Member -MemberType NoteProperty -Name network_config -Value @{"arrayValue" = @{"values" = $network_configs } } 
+$report | Add-Member -MemberType NoteProperty -Name network_config -Value $network_configs 
 
-#ConvertTo-Json produces null values, 
-# instead we shouldn't upload keys with null values at all
-# This is a similar issue:
-# https://stackoverflow.com/questions/33038848/how-to-exclude-non-valued-object-properties-when-converting-to-json-in-powershel
-# The given solution doesn't work though because the value are nested below the firebase type
-$report | ForEach-Object {
-    $NonEmptyProperties = $_.PSObject.Properties | Where-Object {$null -ne $_.Value} | Select-Object -ExpandProperty Name
-}
-
-# Upload the body 
-$body = [PSCustomObject]@{
-    fields = $report
-}
-
-Invoke-WebRequest -Uri $dyle_endpoint -Method POST -Body $(ConvertTo-Json -Depth 12 $body)
+Invoke-WebRequest -Uri $dyle_endpoint -Method POST -Body $(ConvertTo-Json -Depth 4 $report)
