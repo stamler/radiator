@@ -61,6 +61,15 @@ ForEach ($c_net in $c_netset) {
 }
 $report | Add-Member -MemberType NoteProperty -Name network_config -Value @{"arrayValue" = @{"values" = $network_configs } } 
 
+#ConvertTo-Json produces null values, 
+# instead we shouldn't upload keys with null values at all
+# This is a similar issue:
+# https://stackoverflow.com/questions/33038848/how-to-exclude-non-valued-object-properties-when-converting-to-json-in-powershel
+# The given solution doesn't work though because the value are nested below the firebase type
+$report | ForEach-Object {
+    $NonEmptyProperties = $_.PSObject.Properties | Where-Object {$null -ne $_.Value} | Select-Object -ExpandProperty Name
+}
+
 # Upload the body 
 $body = [PSCustomObject]@{
     fields = $report
