@@ -12,7 +12,6 @@ $c_netset = Get-WmiObject Win32_NetworkAdapterConfiguration -Filter "IPEnabled =
 
 # Build the Report
 $report = [PSCustomObject]@{
-    datetime = $(Get-Date -Format "o")
     # [System.Security.Principal.WindowsIdentity]::GetCurrent().Name returns domain prefix too
     username = $env:UserName
     serial = $c_bios.SerialNumber
