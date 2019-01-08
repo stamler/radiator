@@ -21,6 +21,7 @@ $report = [PSCustomObject]@{
     manufacturer = $c_system.Manufacturer
     model = $c_system.Model
     name = $c_system.Name
+    system_type = $c_system.PCSystemType
     ram = $c_system.TotalPhysicalMemory
     boot_drive = $c_volume.DriveLetter
     boot_drive_fs = $c_volume.FileSystem
