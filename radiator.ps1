@@ -12,11 +12,11 @@ $c_netset = Get-WmiObject Win32_NetworkAdapterConfiguration -Filter "IPEnabled =
 
 # Build the Report
 $report = [PSCustomObject]@{
-    # include domain prefix ie. DOMAIN\username
+    # user info includes DOMAIN\Username, upn, user_sid, and domain_sid
     user = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name 
-
-    # Value() is called because otherwise it's a PropertyValueCollection Type
     upn = ([ADSI]"LDAP://<SID=$([System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value)>").UserPrincipalName.Value
+    user_sid = $([System.Security.Principal.WindowsIdentity]::GetCurrent().User).Value
+    domain_sid = $([System.Security.Principal.WindowsIdentity]::GetCurrent().User).AccountDomainSid.Value
 
     serial = $c_bios.SerialNumber
     os_version = $c_os.Version
