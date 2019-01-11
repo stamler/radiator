@@ -11,12 +11,15 @@ $c_volume = Get-WmiObject Win32_Volume -Filter "BootVolume = True"
 $c_netset = Get-WmiObject Win32_NetworkAdapterConfiguration -Filter "IPEnabled = True"
 
 # Build the Report
+$user_info_source = ([ADSI]"LDAP://<SID=$([System.Security.Principal.WindowsIdentity]::GetCurrent().User)>")
 $report = [PSCustomObject]@{
-    # user info includes DOMAIN\Username, upn, user_sid, and domain_sid
-    user = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name 
-    upn = ([ADSI]"LDAP://<SID=$([System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value)>").UserPrincipalName.Value
-    user_sid = $([System.Security.Principal.WindowsIdentity]::GetCurrent().User).Value
-    domain_sid = $([System.Security.Principal.WindowsIdentity]::GetCurrent().User).AccountDomainSid.Value
+    user = $user_info_source.Name.Value # full name 
+    email = $user_info_source.mail.Value
+    upn = $user_info_source.UserPrincipalName.Value
+
+    # These are the same with different endianness 
+    user_objectGUID = [System.Guid]::new($user_info_source.objectGUID.Value)
+    user_NativeGUID = $user_info_source.NativeGuid
 
     serial = $c_bios.SerialNumber
     os_version = $c_os.Version
