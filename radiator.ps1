@@ -18,7 +18,7 @@ $report = [PSCustomObject]@{
     upn = $user_info_source.UserPrincipalName.Value
 
     # These are the same with different endianness 
-    user_objectGUID = [System.Guid]::new($user_info_source.objectGUID.Value)
+    user_objectGUID = [Guid]($user_info_source.objectGUID.Value)
     user_NativeGUID = $user_info_source.NativeGuid
 
     serial = $c_bios.SerialNumber
