@@ -36,7 +36,7 @@ $report = [PSCustomObject]@{
     boot_drive_free = $c_volume.FreeSpace
 }
 
-$network_configs = @()
+$network_configs = @{}
 # TODO: make MAC ADDRESS the key of a map rather than an array
 ForEach ($c_net in $c_netset) {
     # Iterate over array elements and assign type stringValue
@@ -54,7 +54,6 @@ ForEach ($c_net in $c_netset) {
     }
 
     $network_config = @{
-        mac = $c_net.MACAddress
         dhcp_enabled = $c_net.DHCPEnabled
         dhcp_server = $c_net.DHCPServer
         dns_hostname = $c_net.DNSHostName
@@ -64,7 +63,7 @@ ForEach ($c_net in $c_netset) {
         dns_order = $dns_list
     }
 
-    $network_configs += $network_config
+    $network_configs[$c_net.MACAddress] = $network_config
 }
 $report | Add-Member -MemberType NoteProperty -Name network_config -Value $network_configs 
 
