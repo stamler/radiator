@@ -37,6 +37,7 @@ $report = [PSCustomObject]@{
 }
 
 $network_configs = @()
+# TODO: make MAC ADDRESS the key of a map rather than an array
 ForEach ($c_net in $c_netset) {
     # Iterate over array elements and assign type stringValue
     ForEach ($t in $c_net.IPAddress) {
