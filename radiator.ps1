@@ -1,6 +1,11 @@
 # PS v2.0 compatible
 # PS v3.0 and later: Get-CimInstance replaces Get-WmiObject
 
+if ($PSVersionTable.PSVersion.Major -lt 3) {
+    Import-Module .\ConvertTo-STJson.ps1
+    Write-Output "PS version < 3, loading in JSON module"
+}
+
 $dyle_endpoint = "https://us-central1-charade-ca63f.cloudfunctions.net/rawLogins"
 
 # Get the Data
@@ -37,7 +42,6 @@ $report = [PSCustomObject]@{
 }
 
 $network_configs = @{}
-# TODO: make MAC ADDRESS the key of a map rather than an array
 ForEach ($c_net in $c_netset) {
     # Iterate over array elements and assign type stringValue
     ForEach ($t in $c_net.IPAddress) {
@@ -67,6 +71,32 @@ ForEach ($c_net in $c_netset) {
 }
 $report | Add-Member -MemberType NoteProperty -Name network_config -Value $network_configs 
 
-# -ContentType is necessary because otherwise 
-# it will be interpreted as multipart form data
-Invoke-WebRequest -Uri $dyle_endpoint -Method POST -ContentType application/json -Body $(ConvertTo-Json -Depth 4 $report)
+# ContentType required to prevent interpretation as multipart form data
+$request = [System.Net.WebRequest]::Create($dyle_endpoint)
+$request.ContentType = "application/json"
+$request.Method = "POST"
+
+try {
+    $requestStream = $request.GetRequestStream()
+    $streamWriter = New-Object System.IO.StreamWriter($requestStream)
+
+    if ($PSVersionTable.PSVersion.Major -lt 3) {
+        # Old PowerShell with no ConvertTo-Json, use imported module
+        # ConvertTo-STJson https://github.com/EliteLoser/ConvertTo-Json
+        $streamWriter.Write($(ConvertTo-STJson $report))
+    } else {
+        $streamWriter.Write($(ConvertTo-Json -Depth 4 $report))
+    }
+}
+
+finally {
+    if ($null -ne $streamWriter) { $streamWriter.Dispose() }
+    if ($null -ne $requestStream) { $requestStream.Dispose() }
+}
+
+$res = $request.GetResponse()
+Write-Output $res
+
+# subsequent runs fail after successful first run, close the response
+# https://stackoverflow.com/questions/5827030/httpwebrequest-times-out-on-second-call
+$res.close()
