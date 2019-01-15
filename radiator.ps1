@@ -12,7 +12,7 @@ $c_netset = Get-WmiObject Win32_NetworkAdapterConfiguration -Filter "IPEnabled =
 
 # Build the Report
 $user_info_source = ([ADSI]"LDAP://<SID=$([System.Security.Principal.WindowsIdentity]::GetCurrent().User)>")
-$report = [PSCustomObject]@{
+$report = @{
     user = $user_info_source.Name.Value # full name 
     email = $user_info_source.mail.Value
     upn = $user_info_source.UserPrincipalName.Value
@@ -22,6 +22,7 @@ $report = [PSCustomObject]@{
     user_NativeGUID = $user_info_source.NativeGuid
 
     serial = $c_bios.SerialNumber
+    # TODO: Merge Version and SKU into OperatingSystem string? Less flexible but simpler
     os_version = $c_os.Version
     os_sku = $c_os.OperatingSystemSKU
     os_arch = $c_os.OSArchitecture
@@ -65,8 +66,7 @@ ForEach ($c_net in $c_netset) {
     $network_configs[$c_net.MACAddress] = $network_config
 }
 
-# TODO: network_config not sending on PowerShell versions < 3.0
-$report | Add-Member -MemberType NoteProperty -Name network_config -Value $network_configs 
+$report["network_config"] = $network_configs 
 
 # ContentType required to prevent interpretation as multipart form data
 $request = [System.Net.WebRequest]::Create($dyle_endpoint)
