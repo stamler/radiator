@@ -13,12 +13,19 @@ $c_netset = Get-WmiObject Win32_NetworkAdapterConfiguration -Filter "IPEnabled =
 # Build the Report
 $user_info_source = ([ADSI]"LDAP://<SID=$([System.Security.Principal.WindowsIdentity]::GetCurrent().User)>")
 $report = @{
+    radiator_version = 2
     user = $user_info_source.Name.Value # full name 
     email = $user_info_source.mail.Value
     upn = $user_info_source.UserPrincipalName.Value
 
     # These are the same with different endianness 
-    user_objectGUID = [Guid]($user_info_source.objectGUID.Value)
+    # TODO: next line fails when GUID is null
+    if ($null -ne $user_info_source.objectGUID.Value) {
+        $this_user_objectGUID = [Guid]($user_info_source.objectGUID.Value)
+    } else {
+        $this_user_objectGUID = $null
+    }
+    user_objectGUID = $this_user_objectGUID
     user_NativeGUID = $user_info_source.NativeGuid
 
     serial = $c_bios.SerialNumber
