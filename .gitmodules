@@ -1,0 +1,3 @@
+[submodule "ConvertTo-STJson"]
+	path = include/ConvertTo-STJson
+	url = https://github.com/EliteLoser/ConvertTo-Json.git
