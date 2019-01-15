@@ -1,11 +1,6 @@
 # PS v2.0 compatible
 # PS v3.0 and later: Get-CimInstance replaces Get-WmiObject
 
-if ($PSVersionTable.PSVersion.Major -lt 3) {
-    Import-Module .\ConvertTo-STJson.ps1
-    Write-Output "PS version < 3, loading in JSON module"
-}
-
 $dyle_endpoint = "https://us-central1-charade-ca63f.cloudfunctions.net/rawLogins"
 
 # Get the Data
@@ -69,6 +64,8 @@ ForEach ($c_net in $c_netset) {
 
     $network_configs[$c_net.MACAddress] = $network_config
 }
+
+# TODO: network_config not sending on PowerShell versions < 3.0
 $report | Add-Member -MemberType NoteProperty -Name network_config -Value $network_configs 
 
 # ContentType required to prevent interpretation as multipart form data
@@ -83,6 +80,8 @@ try {
     if ($PSVersionTable.PSVersion.Major -lt 3) {
         # Old PowerShell with no ConvertTo-Json, use imported module
         # ConvertTo-STJson https://github.com/EliteLoser/ConvertTo-Json
+        Import-Module .\ConvertTo-STJson.ps1
+        Write-Output "PS version < 3, loading in JSON module"    
         $streamWriter.Write($(ConvertTo-STJson $report))
     } else {
         $streamWriter.Write($(ConvertTo-Json -Depth 4 $report))
