@@ -38,12 +38,13 @@ $report = @{
     boot_drive_free = $c_volume.FreeSpace
 }
 
-# TODO: next line fails when GUID is null
 if ($null -ne $user_info_source.objectGUID.Value) {
     $report["user_objectGUID"] = [Guid]($user_info_source.objectGUID.Value)
 } else {
     $report["user_objectGUID"] = $null
 }
+
+# TODO: get user data for non-domain connected computers
 
 $network_configs = @{}
 ForEach ($c_net in $c_netset) {
