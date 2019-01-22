@@ -1,5 +1,6 @@
 # PS v2.0 compatible
 # PS v3.0 and later: Get-CimInstance replaces Get-WmiObject
+# Assumes that the Azure AD Connect sourceAnchor is ms-DS-ConsistencyGuid
 
 $dyle_endpoint = "https://us-central1-charade-ca63f.cloudfunctions.net/rawLogins"
 
@@ -13,15 +14,11 @@ $c_netset = Get-WmiObject Win32_NetworkAdapterConfiguration -Filter "IPEnabled =
 # Build the Report
 $user_info_source = ([ADSI]"LDAP://<SID=$([System.Security.Principal.WindowsIdentity]::GetCurrent().User)>")
 $report = @{
-    radiator_version = 3
-    user = $user_info_source.Name.Value # full name 
+    radiator_version = 4
+    user_given_name = $user_info_source.givenName
+    user_surname = $user_info_source.sn
     email = $user_info_source.mail.Value
     upn = $user_info_source.UserPrincipalName.Value
-
-    # Later we'll store user_objectGUID which is the same
-    # data with different endinaness   
-    user_NativeGUID = $user_info_source.NativeGuid
-
     serial = $c_bios.SerialNumber
     # TODO: Merge Version and SKU into OperatingSystem string? Less flexible but simpler
     os_version = $c_os.Version
@@ -42,6 +39,13 @@ if ($null -ne $user_info_source.objectGUID.Value) {
     $report["user_objectGUID"] = [Guid]($user_info_source.objectGUID.Value)
 } else {
     $report["user_objectGUID"] = $null
+}
+
+# This uniquely identifies the user
+if ($null -ne $user_info_source.'mS-DS-ConsistencyGuid'.Value) {
+    $report["user_sourceAnchor"] = [System.Convert]::ToBase64String($user_info_source.'mS-DS-ConsistencyGuid'.Value)
+} else {
+    $report["user_sourceAnchor"] = $null
 }
 
 # TODO: get user data for non-domain connected computers
