@@ -15,8 +15,8 @@ $c_netset = Get-WmiObject Win32_NetworkAdapterConfiguration -Filter "IPEnabled =
 $user_info_source = ([ADSI]"LDAP://<SID=$([System.Security.Principal.WindowsIdentity]::GetCurrent().User)>")
 $report = @{
     radiator_version = 4
-    user_given_name = $user_info_source.givenName
-    user_surname = $user_info_source.sn
+    user_given_name = $user_info_source.givenName.Value
+    user_surname = $user_info_source.sn.Value
     email = $user_info_source.mail.Value
     upn = $user_info_source.UserPrincipalName.Value
     serial = $c_bios.SerialNumber
