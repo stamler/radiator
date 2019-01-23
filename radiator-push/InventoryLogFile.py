@@ -108,8 +108,11 @@ class InventoryLogFile(object):
             regex_match = self.regex.match(line)
             obj = {}#{'line':line.rstrip()}
             obj['username'] = regex_match.group(2).lower()
-            obj['manufacturer'] = constants.manufacturer_subs[regex_match.group(3)]
-            obj['serial'] = regex_match.group(4)
+            obj['manufacturer'] = regex_match.group(3)
+            obj['serial'] = regex_match.group(4).strip()
+            # The SLUG code in firebase cloud function rawLogins:
+            # serial.trim() + ',' + mfg.toLowerCase().replace('.','').replace(',','').replace('inc','').replace('ltd','').trim().replace(' ','_');
+            obj['slug'] = obj['serial'] +','+ obj['manufacturer'].lower().replace('.','').replace(',','').replace('inc','').replace('ltd','').strip().replace(' ','_')
             obj['computer_name'] = regex_match.group(5)
             if(self.version > constants.Version.v3):
                 obj['network_config'] = json.loads(regex_match.group(6))
