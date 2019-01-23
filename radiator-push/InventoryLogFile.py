@@ -48,6 +48,7 @@ class InventoryLogFile(object):
         lower_bound = upper_bound = None  # datetime objects
         span = 0    # number of ambiguous datetime strings counted in this area
         list_length = len(line_objects)
+        idx = 0 # along with t, the indices between which dates are ambiguous
 
         for i, line_object in enumerate(line_objects):
 
@@ -160,3 +161,17 @@ class InventoryLogFile(object):
             line['client_id'] = ''.join(random.choice(string.ascii_uppercase) for _ in range(16))
             self.client_ids.append(line['client_id'])
         return json.dumps(self.lines, default=str, separators=(',', ':'))
+    
+    def to_json_api_obj(self):
+        if len(self.lines) == 1:
+            # return a dict rather than a list for one line
+            resource = { "type": "RawLogins", "attributes": self.lines[0] }
+            return resource
+        
+        resources = []
+        for line in self.lines:
+            # return a list of dicts. TODO: validate client_id, although this may be a breaking line
+            line['client_id'] = ''.join(random.choice(string.ascii_uppercase) for _ in range(16))
+            self.client_ids.append(line['client_id'])
+            resources.append({ "type": "RawLogins", "attributes": line })
+        return resources
