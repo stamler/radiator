@@ -93,7 +93,8 @@ def groom(search_path):
                     'Accept':'application/json',
                     'Authorization': "Bearer {}".format(jwt_token)}
         log.debug("headers: {}".format(headers))
-        data = inventory_log_file.to_json()
+        data = { "data": inventory_log_file.to_json_api_obj() }
+        data = json.dumps(data, default=str, separators=(',', ':'))
 
         log.debug("Sending {} items.".format(lc))
 
@@ -107,20 +108,10 @@ def groom(search_path):
         data = json.loads(r.text)['data']
 
         if r.status_code == 201:
-            rowcount = data['rowcount']
-            if lc == rowcount:
-                log.info("201 Saved {} items.".format(rowcount))
-        elif r.status_code == 207:
-            rowcount = 0
-            for i in data:
-                if ( i['client_id'] in inventory_log_file.client_ids and
-                        i['status'] == '201 Created' and
-                        i['body']['rowcount'] == 1 ):
-                    log.debug("returned client_id {} was sent".format(
-                                                            i['client_id']))
-                    rowcount += 1
-            if lc == rowcount:
-                log.info("207 Saved and matched {} items.".format(rowcount))
+            try:
+                log.info("201 Saved item with id {}.".format(data["id"]))
+            except KeyError:
+                log.info("201 Saved {} items.".format(data['rowcount']))
 
         else:
             msg = "HTTP status {} was returned".format(r.status_code)
