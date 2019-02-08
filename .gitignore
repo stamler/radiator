@@ -10,3 +10,6 @@ __MACOSX
 *.pyc
 
 .mypy_cache
+
+# macOS
+.DS_Store
